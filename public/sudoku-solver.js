@@ -5,6 +5,7 @@ const clearButton = document.getElementById("clear-button");
 const cellInputs = document.querySelectorAll("td input");
 const table = document.querySelector("table");
 
+// FCC What you want me do wit dis?
 // import { puzzlesAndSolutions } from './puzzle-strings.js';
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -17,10 +18,12 @@ document.addEventListener("DOMContentLoaded", () => {
 solveButton.addEventListener("click", solveHandler);
 clearButton.addEventListener("click", clearHandler);
 textArea.addEventListener("input", textAreaHandler);
-table.addEventListener("input", handleCellInputs);
+table.addEventListener("input", cellInputsHandler);
 
 function solveHandler(event) {
-  solvePuzzle(textArea.value);
+  if (textArea.value.length === 81) {
+    solvePuzzle(textArea.value);
+  }
 }
 
 function clearHandler(event) {
@@ -40,7 +43,7 @@ function textAreaHandler(event) {
 }
 
 // Table ==> Text-area
-function handleCellInputs(event) {
+function cellInputsHandler(event) {
   const validInput = isValidInput(event.data);
   if (validInput) {
     event.target.value = event.data;
@@ -148,12 +151,12 @@ function testPuzzle(sudokuString) {
   for (let row = 0; row < table.length; row++) {
     for (let col = 0; col < table[row].length; col++) {
       const cellValue = table[row][col];
-      const test = violationCheck(
+      const violationFound = violationCheck(
         cellValue,
         row.toString() + col.toString(),
         table
       );
-      if (test) {
+      if (violationFound) {
         return false;
       }
     }
@@ -162,22 +165,34 @@ function testPuzzle(sudokuString) {
 }
 
 function solvePuzzle(sudokuString) {
-  // Test at beginning and end?
-  const allNums = sudokuString.match(/\d+/);
-  if (allNums[0].length === 81) {
+  const nums = sudokuString.split("").filter(Number);
+  const validInputs = sudokuString
+    .split("")
+    .every((el) => isValidInput(el) || el === ".");
+
+  if (nums.length === 81) {
     const result = testPuzzle(sudokuString);
-    console.log(result);
+    console.log("Puzzle is " + result);
     return result;
+  }
+
+  if (!validInputs) {
+    console.log("Puzzle must be only numbers 1 - 9");
+    return false;
   }
 
   const table = makeTable(sudokuString);
   const solvedTable = makeTable(sudokuString);
 
-  let numToTry = 1;
+  // Original position for this var
+  // idk how I wanna do this yet
+  // let numToTry = 1;
 
   let row = 0;
   while (row < solvedTable.length) {
     let col = 0;
+    let numToTry = 1;
+
     while (col < solvedTable[row].length) {
       if (table[row][col] !== ".") {
         col++;
@@ -189,7 +204,7 @@ function solvePuzzle(sudokuString) {
         solvedTable[row][col] = numToTry.toString();
 
         // Test if number causes violation
-        const isViolation = violationCheck(
+        const violationFound = violationCheck(
           numToTry.toString(),
           row.toString() + col.toString(),
           solvedTable
@@ -197,7 +212,7 @@ function solvePuzzle(sudokuString) {
 
         // If violation is found, try the next number
         // Else, if no violation we can reset numToTry and break loop
-        if (isViolation) {
+        if (violationFound) {
           numToTry++;
           continue;
         } else {
@@ -228,6 +243,7 @@ function solvePuzzle(sudokuString) {
 
         // If the previous cell in the original table is a number, go back one more
         while (table[row][col] !== ".") {
+          // Go back one column
           col = col - 1;
 
           // And I'll have to account for col - 1 being less than 0
@@ -256,7 +272,7 @@ function solvePuzzle(sudokuString) {
 
   textArea.value = solvedTable.flat().join("");
   textToTable();
-  // I need to test the resulting string to be sure
+  // I need to test the resulting string to be sure ...or do I? ...
   console.log("Puzzle solved! I hope!");
   return true;
 }
@@ -273,5 +289,9 @@ try {
     validPuzzleLength,
     testPuzzle,
     solvePuzzle,
+    textToTable,
+    tableToText,
+    clearHandler,
+    solveHandler,
   };
 } catch (e) {}
